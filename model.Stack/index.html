@@ -326,17 +326,27 @@
               <em>required</em>
           </td>
         </tr>
+        <tr>
+          <td><code>num_features</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of features of the input series.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
     </tbody>
   </table>
       <p>Returns: None</p>
 
           <details class="quote">
             <summary>Source code in <code>src\model.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">80</span>
-<span class="normal">81</span>
-<span class="normal">82</span>
-<span class="normal">83</span>
-<span class="normal">84</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">84</span>
 <span class="normal">85</span>
 <span class="normal">86</span>
 <span class="normal">87</span>
@@ -346,21 +356,27 @@
 <span class="normal">91</span>
 <span class="normal">92</span>
 <span class="normal">93</span>
-<span class="normal">94</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">component</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">94</span>
+<span class="normal">95</span>
+<span class="normal">96</span>
+<span class="normal">97</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">component</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Stack of the N-BEATS architecture.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        dict_params: Dictionary containing the configuration settings.</span>
 <span class="sd">        component: String representing the component to be modelled; it can be either &#39;trend&#39; or &#39;seasonality&#39;.</span>
+<span class="sd">        num_features: Number of features of the input series.</span>
 
 <span class="sd">    Returns: None</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
     <span class="c1">#</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">block_1</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">dict_params</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">,</span> <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">block_2</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">dict_params</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">,</span> <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">block_3</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">dict_params</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">,</span> <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_1</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">dict_params</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">,</span> <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_2</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">dict_params</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">,</span> <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_3</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">dict_params</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">,</span> <span class="n">component</span> <span class="o">=</span> <span class="n">component</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
           </details>
   </div>
