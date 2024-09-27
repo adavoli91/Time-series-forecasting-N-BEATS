@@ -37,7 +37,7 @@ def get_x_y(df: pd.DataFrame, df_future: pd.DataFrame, dict_params: dict, test_s
     Args:
         df: Dataframe containing time series. The column representing the main series should be called `y`.
         df_future: Same as `df`, but corresponding to its future (e.g., `df_valid` could be the "future" of `df_train`).
-        dict_params: Dictionary containing information about data properties.
+        dict_params: Dictionary containing information about the model architecture.
         test_set: Whether `df` is the dataframe corresponding to test set.
         horizon_forecast: Length of the series to be predicted.
 
@@ -73,16 +73,8 @@ def get_x_y(df: pd.DataFrame, df_future: pd.DataFrame, dict_params: dict, test_s
     x = torch.tensor(x.astype(np.float32))
     y = torch.tensor(y.astype(np.float32))
     #
-    if len(x.shape) == 2:
-        x = x.reshape(x.shape[0], 1, -1)
-        y = y.reshape(y.shape[0], 1, -1)
-        date_x = date_x.reshape(x.shape[0], 1, -1)
-        date_y = date_y.reshape(y.shape[0], 1, -1)
-    if len(x.shape) == 3:
-        x = torch.tensor(np.einsum('btc -> bct', x))
-        y = torch.tensor(np.einsum('btc -> bct', y))
-        date_x = date_x.reshape(x.shape[0], 1, -1)
-        date_y = date_y.reshape(y.shape[0], 1, -1)
+    date_x = date_x.reshape(x.shape[0], -1, 1)
+    date_y = date_y.reshape(y.shape[0], -1, 1)
     #
     return x, y, date_x, date_y
 

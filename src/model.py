@@ -1,17 +1,16 @@
 import numpy as np
 import torch
 import sklearn
+
 class Block(torch.nn.Module):
-    def __init__(self, dict_params: dict, component: str):
+    def __init__(self, dict_params: dict, component: str, num_features: int) -> None:
         '''
-        Block of the N-BEATS architecture. The formulae are implemented slightly differently than in the original paper:
-        the input data is in the form (batch_size, n_feat, len_input), the matrix multiplications are implemented as
-        theta_f * T^T (theta_f*S^T) and the forecast output has dimensions (batch_size, n_feat, horizon_forecast); actually,
-        only the first feature of the input is kept, representing the forecast of the time series.
+        Block of the N-BEATS architecture.
         
         Args:
             dict_params: Dictionary containing the configuration settings.
             component: String representing the component to be modelled; it can be either 'trend' or 'seasonality'.
+            num_features: Number of features of the input series.
             
         Returns: None
         '''
@@ -23,8 +22,10 @@ class Block(torch.nn.Module):
         n_neur_hidden = dict_params['model']['n_neur_hidden']
         frac_dropout = dict_params['model']['frac_dropout']
         self.component = component
+        self.horizon_forecast = horizon_forecast
+        self.n_comp_trend = n_comp_trend
         # hidden layers of the FC stack
-        self.dense_hid_1 = torch.nn.Linear(in_features = len_input, out_features = n_neur_hidden)
+        self.dense_hid_1 = torch.nn.Linear(in_features = len_input*num_features, out_features = n_neur_hidden)
         self.dense_hid_2 = torch.nn.Linear(in_features = n_neur_hidden, out_features = n_neur_hidden)
         self.dense_hid_3 = torch.nn.Linear(in_features = n_neur_hidden, out_features = n_neur_hidden)
         self.dense_hid_4 = torch.nn.Linear(in_features = n_neur_hidden, out_features = n_neur_hidden)
@@ -37,7 +38,7 @@ class Block(torch.nn.Module):
         # dense layer for producing the theta's
         self.dense_theta_b = torch.nn.Linear(in_features = n_neur_hidden, out_features = n_neur_hidden, bias = False)
         if component == 'trend':
-            self.dense_theta_f = torch.nn.Linear(in_features = n_neur_hidden, out_features = n_comp_trend + 1, bias = False)
+            self.dense_theta_f = torch.nn.Linear(in_features = n_neur_hidden, out_features = self.n_comp_trend + 1, bias = False)
         if component == 'seasonality':
             self.dense_theta_f = torch.nn.Linear(in_features = n_neur_hidden, out_features = 2*int(np.floor(horizon_forecast/2-1)) + 1, bias = False)
         # trend and seasonality matrices
@@ -52,15 +53,17 @@ class Block(torch.nn.Module):
         self.dense_x_hat = torch.nn.Linear(in_features = n_neur_hidden, out_features = len_input)
         
     def forward(self, x):
-        y = self.dense_hid_1(x).transpose(1, 2)
-        y = self.batch_norm_1(y).transpose(1, 2)
+        x = x.reshape(x.shape[0], -1)
+        #
+        y = self.dense_hid_1(x)
+        y = self.batch_norm_1(y)
         y = self.relu(y)
         y = self.dropout(y)
         for i in range(3):
             hidden_layer = [self.dense_hid_2, self.dense_hid_3, self.dense_hid_4][i]
             batch_norm = [self.batch_norm_2, self.batch_norm_3, self.batch_norm_4][i]
-            y = hidden_layer(y).transpose(1, 2)
-            y = batch_norm(y).transpose(1, 2)
+            y = hidden_layer(y)
+            y = batch_norm(y)
             y = self.relu(y)
             y = self.dropout(y)
         # compute theta's
@@ -68,30 +71,32 @@ class Block(torch.nn.Module):
         theta_f = self.dense_theta_f(y)
         # compute backcast
         x_hat = self.dense_x_hat(theta_b)
+        x_hat = x_hat.reshape(*x_hat.shape, 1)
         # compute time series components
         if self.component == 'trend':
-            y_hat = torch.matmul(theta_f, self.mat_T.T)[:, :1, :]
+            y_hat = torch.matmul(self.mat_T.repeat(theta_f.shape[0], 1, 1), theta_f.reshape(*theta_f.shape, 1))
         if self.component == 'seasonality':
-            y_hat = torch.matmul(theta_f, self.mat_S.T)[:, :1, :]
+            y_hat = torch.matmul(self.mat_S.repeat(theta_f.shape[0], 1, 1), theta_f.reshape(*theta_f.shape, 1))
         #
         return x_hat, y_hat
 
 class Stack(torch.nn.Module):
-    def __init__(self, dict_params: dict, component: str):
+    def __init__(self, dict_params: dict, component: str, num_features: int) -> None:
         '''
         Stack of the N-BEATS architecture.
         
         Args:
             dict_params: Dictionary containing the configuration settings.
             component: String representing the component to be modelled; it can be either 'trend' or 'seasonality'.
+            num_features: Number of features of the input series.
             
         Returns: None
         '''
         super().__init__()
         #
-        self.block_1 = Block(dict_params = dict_params, component = component)
-        self.block_2 = Block(dict_params = dict_params, component = component)
-        self.block_3 = Block(dict_params = dict_params, component = component)
+        self.block_1 = Block(dict_params = dict_params, component = component, num_features = num_features)
+        self.block_2 = Block(dict_params = dict_params, component = component, num_features = num_features)
+        self.block_3 = Block(dict_params = dict_params, component = component, num_features = num_features)
         
     def forward(self, x):
         # first block
@@ -111,19 +116,20 @@ class Stack(torch.nn.Module):
         return x_hat, y_hat
 
 class NBeats(torch.nn.Module):
-    def __init__(self, dict_params: dict):
+    def __init__(self, dict_params: dict, num_features: int) -> None:
         '''
         N-BEATS architecture.
         
         Args:
             dict_params: Dictionary containing the configuration settings.
+            num_features: Number of features of the input series.
             
         Returns: None
         '''
         super().__init__()
         #
-        self.stack_trend = Stack(dict_params = dict_params, component = 'trend')
-        self.stack_seas = Stack(dict_params = dict_params, component = 'seasonality')
+        self.stack_trend = Stack(dict_params = dict_params, component = 'trend', num_features = num_features)
+        self.stack_seas = Stack(dict_params = dict_params, component = 'seasonality', num_features = num_features)
         
     def forward(self, x):
         # trend stack
@@ -137,7 +143,7 @@ class NBeats(torch.nn.Module):
 class TrainNBeats:
     def __init__(self, model: torch.nn.Module, dict_params: dict, dataloader_train: torch.utils.data.DataLoader, dataloader_valid: torch.utils.data.DataLoader):
         '''
-        Class to train the TCN model.
+        Class to train the N-BEATS model.
         
         Args:
             model: PyTorch model.
@@ -177,7 +183,7 @@ class TrainNBeats:
         y_hat_trend = y_hat_trend.to('cpu')
         y_hat_seas = y_hat_seas.to('cpu')
         #
-        loss = self.loss_func(y_hat_trend, y_true)
+        loss = self.loss_func(y_hat_trend + y_hat_seas, y_true)
         #
         if training == True:
             loss.backward()
@@ -187,7 +193,7 @@ class TrainNBeats:
 
     def _train(self) -> float:
         '''
-        Function to train the TCN model on a single epoch.
+        Function to train the N-BEATS model on a single epoch.
         
         Args: None.
             
@@ -202,7 +208,7 @@ class TrainNBeats:
 
     def _eval(self) -> float:
         '''
-        Function to evaluate the TCN model on the validation set on a single epoch.
+        Function to evaluate the N-BEATS model on the validation set on a single epoch.
         
         Args: None.
             
@@ -218,7 +224,7 @@ class TrainNBeats:
 
     def train_model(self) -> (torch.nn.Module, list, list):
         '''
-        Function to train the TCN model.
+        Function to train the N-BEATS model.
         
         Args: None.
             
@@ -260,7 +266,7 @@ def get_y_true_y_hat(model: torch.nn.Module, x: torch.tensor, y: torch.tensor, d
     Function to get the real time series and its prediction.
     
     Args:
-        model: Trained TCN model.
+        model: Trained N-BEATS model.
         x: Tensor representing regressors.
         y: Tensor representing target time series.
         date_y: Array containing the dates corresponding to the elements of `y`.
@@ -274,13 +280,13 @@ def get_y_true_y_hat(model: torch.nn.Module, x: torch.tensor, y: torch.tensor, d
     list_date = []
     y_true = []
     y_hat_trend, y_hat_seas = [], []
-    preds_trend, pred_seas = model(x)
+    pred_trend, pred_seas = model(x)
     for i in range(np.unique(date_y).shape[0]):
         date = np.unique(date_y)[i]
         list_date.append(date)
         idx = np.where(date_y == date)
         y_true.append(y.numpy()[idx].mean())
-        y_hat_trend.append(preds_trend.detach().numpy()[idx].mean())
+        y_hat_trend.append(pred_trend.detach().numpy()[idx].mean())
         y_hat_seas.append(pred_seas.detach().numpy()[idx].mean())
     y_true = np.array(y_true)
     y_hat_trend = np.array(y_hat_trend)

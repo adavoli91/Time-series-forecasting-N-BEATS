@@ -1,4 +1,4 @@
-# Temporal convolutional network
+# N-BEATS
 
 This repository contains an implementation of the **N-BEATS** architecture, first presented in [N-BEATS: Neural basis expansion analysis for interpretable time series forecasting](https://arxiv.org/abs/1905.10437).
 

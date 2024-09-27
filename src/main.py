@@ -41,10 +41,10 @@ def main():
     dataloader_train = torch.utils.data.DataLoader(dataset_train, batch_size = dict_params['training']['batch_size'], shuffle = True)
     dataloader_valid = torch.utils.data.DataLoader(dataset_valid, batch_size = dict_params['training']['batch_size'], shuffle = False)
     # train model
-    model = NBeats(dict_params = dict_params)
+    model = NBeats(dict_params = dict_params, num_features = x_train.shape[2])
     model, list_loss_train, list_loss_valid = TrainNBeats(model = model, dict_params = dict_params, dataloader_train = dataloader_train, dataloader_valid = dataloader_train).train_model()
     # evaluate results
-    model = NBeats(dict_params = dict_params)
+    model = NBeats(dict_params = dict_params, num_features = x_train.shape[2])
     model.load_state_dict(torch.load('../data/artifacts/weights.p'))
     model.eval()
     # get time series and the corresponding predictions
@@ -59,11 +59,23 @@ def main():
     plt.figure(figsize = [10, 6])
     plt.plot(np.unique(date_y_test), y_true_test, label = 'True', color = 'r')
     plt.plot(np.unique(date_y_test), y_hat_trend_test + y_hat_seas_test - scaler.mean_, label = 'Predicted', color = 'b')
+    plt.plot(np.unique(date_y_test), y_hat_trend_test, label = 'Trend', color = 'b', ls = '--')
+    plt.plot(np.unique(date_y_test), y_hat_seas_test - scaler.mean_, label = 'Seasonality', color = 'b', ls = ':')
     plt.xlabel('Date', fontsize = 16)
     plt.ylabel('Sales', fontsize = 16)
     plt.xticks(rotation = 45)
     plt.legend()
     plt.savefig('../docs/figures_for_readme/result', bbox_inches = 'tight')
+    plt.show()
+    #
+    plt.figure(figsize = [10, 6])
+    plt.plot(list_loss_train, c = 'r', label = 'Training')
+    plt.plot(list_loss_valid, c = 'b', label = 'Validation')
+    plt.xlabel('Epoch', fontsize = 16)
+    plt.ylabel('Loss', fontsize = 16)
+    plt.legend()
+    plt.savefig('../docs/figures_for_readme/loss', bbox_inches = 'tight')
+    plt.show()
 
 if __name__ == '__main__':
     df_result = main()

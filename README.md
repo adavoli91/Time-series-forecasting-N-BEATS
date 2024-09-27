@@ -1,7 +1,6 @@
-# Temporal convolutional network
+# N-BEATS
 
-This repository contains an implementation of the *Temporal convolutional network* (**TCN**) architecture, first presented in [An Empirical Evaluation of Generic Convolutional and Recurrent Networks
-for Sequence Modeling](https://arxiv.org/pdf/1803.01271).
+This repository contains an implementation of the **N-BEATS** architecture, first presented in [N-BEATS: Neural basis expansion analysis for interpretable time series forecasting](https://arxiv.org/abs/1905.10437).
 
 The dataset used for this example can be found at [Store Sales - Time Series Forecasting](https://www.kaggle.com/competitions/store-sales-time-series-forecasting/). In particular, a model is defined and trained for each category present in the dataset.
 

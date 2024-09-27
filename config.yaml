@@ -1,5 +1,5 @@
 {
-  'data': {'len_input': 20, 'horizon_forecast': 5, 'size_train': 0.8, 'size_valid': 0.2},
+  'data': {'len_input': 100, 'horizon_forecast': 20, 'size_train': 0.8, 'size_valid': 0.2},
   'model': {'n_comp_trend': 3, 'n_neur_hidden': 100, 'frac_dropout': 0.2},
   'training': {'batch_size': 128, 'n_epochs': 500, 'patience': 50, 'min_delta_loss_perc': 0.01}
 }
