@@ -4,6 +4,8 @@ This repository contains an implementation of the **N-BEATS** architecture, firs
 
 The dataset used for this example can be found at [Store Sales - Time Series Forecasting](https://www.kaggle.com/competitions/store-sales-time-series-forecasting/). In particular, a model is defined and trained for each category present in the dataset.
 
+The full documentation to this repository can be found in [documentation](https://adavoli91.github.io/Time-series-forecasting-N-BEATS/doc_config/).
+
 The code is organized in the following sections:
 
 - [Preprocessing](./docs/doc_preprocess.md): this section prepares data for the model;

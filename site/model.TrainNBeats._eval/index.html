@@ -283,7 +283,7 @@
 <a id="src.model.TrainNBeats._eval"></a>
   <div class="doc doc-contents first">
   
-      <p>Function to evaluate the TCN model on the validation set on a single epoch.</p>
+      <p>Function to evaluate the N-BEATS model on the validation set on a single epoch.</p>
 <p>Args: None.</p>
 
 
@@ -312,13 +312,7 @@
 
           <details class="quote">
             <summary>Source code in <code>src\model.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
 <span class="normal">212</span>
@@ -326,9 +320,15 @@
 <span class="normal">214</span>
 <span class="normal">215</span>
 <span class="normal">216</span>
-<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Function to evaluate the TCN model on the validation set on a single epoch.</span>
+<span class="sd">    Function to evaluate the N-BEATS model on the validation set on a single epoch.</span>
 
 <span class="sd">    Args: None.</span>
 

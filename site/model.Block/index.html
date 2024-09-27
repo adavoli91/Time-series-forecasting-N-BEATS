@@ -283,10 +283,7 @@
 <a id="src.model.Block.__init__"></a>
   <div class="doc doc-contents first">
   
-      <p>Block of the N-BEATS architecture. The formulae are implemented slightly differently than in the original paper:
-the input data is in the form (batch_size, n_feat, len_input), the matrix multiplications are implemented as
-theta_f * T^T (theta_f*S^T) and the forecast output has dimensions (batch_size, n_feat, horizon_forecast); actually,
-only the first feature of the input is kept, representing the forecast of the time series.</p>
+      <p>Block of the N-BEATS architecture.</p>
 
 
 
@@ -329,14 +326,27 @@ only the first feature of the input is kept, representing the forecast of the ti
               <em>required</em>
           </td>
         </tr>
+        <tr>
+          <td><code>num_features</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of features of the input series.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
     </tbody>
   </table>
       <p>Returns: None</p>
 
           <details class="quote">
             <summary>Source code in <code>src\model.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 5</span>
-<span class="normal"> 6</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 6</span>
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
@@ -382,16 +392,15 @@ only the first feature of the input is kept, representing the forecast of the ti
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
-<span class="normal">52</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">component</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">52</span>
+<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">component</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Block of the N-BEATS architecture. The formulae are implemented slightly differently than in the original paper:</span>
-<span class="sd">    the input data is in the form (batch_size, n_feat, len_input), the matrix multiplications are implemented as</span>
-<span class="sd">    theta_f * T^T (theta_f*S^T) and the forecast output has dimensions (batch_size, n_feat, horizon_forecast); actually,</span>
-<span class="sd">    only the first feature of the input is kept, representing the forecast of the time series.</span>
+<span class="sd">    Block of the N-BEATS architecture.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        dict_params: Dictionary containing the configuration settings.</span>
 <span class="sd">        component: String representing the component to be modelled; it can be either &#39;trend&#39; or &#39;seasonality&#39;.</span>
+<span class="sd">        num_features: Number of features of the input series.</span>
 
 <span class="sd">    Returns: None</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -403,8 +412,10 @@ only the first feature of the input is kept, representing the forecast of the ti
     <span class="n">n_neur_hidden</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">][</span><span class="s1">&#39;n_neur_hidden&#39;</span><span class="p">]</span>
     <span class="n">frac_dropout</span> <span class="o">=</span> <span class="n">dict_params</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">][</span><span class="s1">&#39;frac_dropout&#39;</span><span class="p">]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">component</span> <span class="o">=</span> <span class="n">component</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">horizon_forecast</span> <span class="o">=</span> <span class="n">horizon_forecast</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">n_comp_trend</span> <span class="o">=</span> <span class="n">n_comp_trend</span>
     <span class="c1"># hidden layers of the FC stack</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">dense_hid_1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">len_input</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dense_hid_1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">len_input</span><span class="o">*</span><span class="n">num_features</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">dense_hid_2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">dense_hid_3</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">dense_hid_4</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">)</span>
@@ -417,7 +428,7 @@ only the first feature of the input is kept, representing the forecast of the ti
     <span class="c1"># dense layer for producing the theta&#39;s</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">dense_theta_b</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">component</span> <span class="o">==</span> <span class="s1">&#39;trend&#39;</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dense_theta_f</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="n">n_comp_trend</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dense_theta_f</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_comp_trend</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">component</span> <span class="o">==</span> <span class="s1">&#39;seasonality&#39;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dense_theta_f</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_features</span> <span class="o">=</span> <span class="n">n_neur_hidden</span><span class="p">,</span> <span class="n">out_features</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">horizon_forecast</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
     <span class="c1"># trend and seasonality matrices</span>
