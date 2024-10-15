@@ -41,10 +41,10 @@ def main():
     dataloader_train = torch.utils.data.DataLoader(dataset_train, batch_size = dict_params['training']['batch_size'], shuffle = True)
     dataloader_valid = torch.utils.data.DataLoader(dataset_valid, batch_size = dict_params['training']['batch_size'], shuffle = False)
     # train model
-    model = NBeats(dict_params = dict_params, num_features = x_train.shape[2])
+    model = NBeats(dict_params = dict_params, num_features = x_train.shape[1])
     model, list_loss_train, list_loss_valid = TrainNBeats(model = model, dict_params = dict_params, dataloader_train = dataloader_train, dataloader_valid = dataloader_train).train_model()
     # evaluate results
-    model = NBeats(dict_params = dict_params, num_features = x_train.shape[2])
+    model = NBeats(dict_params = dict_params, num_features = x_train.shape[1])
     model.load_state_dict(torch.load('../data/artifacts/weights.p'))
     model.eval()
     # get time series and the corresponding predictions

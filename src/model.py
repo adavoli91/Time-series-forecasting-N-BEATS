@@ -53,30 +53,29 @@ class Block(torch.nn.Module):
         self.dense_x_hat = torch.nn.Linear(in_features = n_neur_hidden, out_features = len_input)
         
     def forward(self, x):
-        x = x.reshape(x.shape[0], -1)
-        #
-        y = self.dense_hid_1(x)
-        y = self.batch_norm_1(y)
+        y = self.dense_hid_1(x).transpose(1, 2)
+        y = self.batch_norm_1(y).transpose(1, 2)
         y = self.relu(y)
         y = self.dropout(y)
         for i in range(3):
             hidden_layer = [self.dense_hid_2, self.dense_hid_3, self.dense_hid_4][i]
             batch_norm = [self.batch_norm_2, self.batch_norm_3, self.batch_norm_4][i]
-            y = hidden_layer(y)
-            y = batch_norm(y)
+            y = hidden_layer(y).transpose(1, 2)
+            y = batch_norm(y).transpose(1, 2)
             y = self.relu(y)
             y = self.dropout(y)
         # compute theta's
         theta_b = self.dense_theta_b(y)
-        theta_f = self.dense_theta_f(y)
+        theta_f = self.dense_theta_f(y).transpose(1, 2)
         # compute backcast
         x_hat = self.dense_x_hat(theta_b)
-        x_hat = x_hat.reshape(*x_hat.shape, 1)
         # compute time series components
         if self.component == 'trend':
-            y_hat = torch.matmul(self.mat_T.repeat(theta_f.shape[0], 1, 1), theta_f.reshape(*theta_f.shape, 1))
+            y_hat = torch.matmul(self.mat_T.repeat(theta_f.shape[0], 1, 1), theta_f).transpose(1, 2)
         if self.component == 'seasonality':
-            y_hat = torch.matmul(self.mat_S.repeat(theta_f.shape[0], 1, 1), theta_f.reshape(*theta_f.shape, 1))
+            y_hat = torch.matmul(self.mat_S.repeat(theta_f.shape[0], 1, 1), theta_f).transpose(1, 2)
+        #
+        y_hat = y_hat[:, :1, :]
         #
         return x_hat, y_hat
 

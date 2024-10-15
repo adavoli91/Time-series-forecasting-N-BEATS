@@ -50,6 +50,7 @@ def get_x_y(df: pd.DataFrame, df_future: pd.DataFrame, dict_params: dict, test_s
     dict_params = dict_params['data']
     #
     len_input = dict_params['len_input']
+    delta = dict_params['delta']
     if (horizon_forecast is None) or (horizon_forecast >= len_input):
         horizon_forecast = len_input
     #
@@ -62,19 +63,19 @@ def get_x_y(df: pd.DataFrame, df_future: pd.DataFrame, dict_params: dict, test_s
         df_present = df_present.iloc[:df_future.shape[0]]
     #
     x = np.array([df_present.loc[i: i + len_input - 1,
-                                 [col for col in df_present.columns if col != 'date']].values for i in range(df_present.shape[0] - len_input)])
-    y = np.array([df_future.loc[i: i + horizon_forecast - 1, ['y']].values for i in range(df_future.shape[0] - horizon_forecast)])
-    date_x = np.array([df_present.loc[i: i + len_input - 1, 'date'].values for i in range(df_present.shape[0] - len_input)])
-    date_y = np.array([df_future.loc[i: i + horizon_forecast - 1, 'date'].values for i in range(df_future.shape[0] - horizon_forecast)])
+                                 [col for col in df_present.columns if col != 'date']].values for i in range(0, df_present.shape[0] - len_input, delta)])
+    y = np.array([df_future.loc[i: i + horizon_forecast - 1, ['y']].values for i in range(0, df_future.shape[0] - horizon_forecast, delta)])
+    date_x = np.array([df_present.loc[i: i + len_input - 1, 'date'].values for i in range(0, df_present.shape[0] - len_input, delta)])
+    date_y = np.array([df_future.loc[i: i + horizon_forecast - 1, 'date'].values for i in range(0, df_future.shape[0] - horizon_forecast, delta)])
     #
     y = y[:x.shape[0]]
     date_y = date_y[:date_x.shape[0]]
     #
-    x = torch.tensor(x.astype(np.float32))
-    y = torch.tensor(y.astype(np.float32))
+    x = torch.tensor(x.astype(np.float32)).transpose(1, 2)
+    y = torch.tensor(y.astype(np.float32)).transpose(1, 2)
     #
-    date_x = date_x.reshape(x.shape[0], -1, 1)
-    date_y = date_y.reshape(y.shape[0], -1, 1)
+    date_x = date_x.reshape(x.shape[0], 1, -1)
+    date_y = date_y.reshape(y.shape[0], 1, -1)
     #
     return x, y, date_x, date_y
 
